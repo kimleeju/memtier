@@ -26,7 +26,7 @@
 #ifdef HAVE_ASSERT_H
 #include <assert.h>
 #endif
-
+#include <errno.h>
 #include "protocol.h"
 #include "memtier_benchmark.h"
 #include "libmemcached_protocol/binary.h"
@@ -558,7 +558,8 @@ int redis_protocol::parse_response(void)
 
                         // insert it to current mbulk
                         m_current_mbulk->add_new_element(new_bulk);
-                        m_current_mbulk = m_current_mbulk->get_next_mbulk();
+						m_current_mbulk = m_current_mbulk->get_next_mbulk();
+
                     } else {
                         m_last_response.set_value(bulk_value, m_bulk_len);
                     }

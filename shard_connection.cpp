@@ -67,7 +67,6 @@ void cluster_client_read_handler(bufferevent *bev, void *ctx)
 void cluster_client_event_handler(bufferevent *bev, short events, void *ctx)
 {
     shard_connection *sc = (shard_connection *) ctx;
-
     assert(sc != NULL);
     sc->handle_event(events);
 }
@@ -524,8 +523,8 @@ void shard_connection::handle_event(short events)
 
     if (events & BEV_EVENT_EOF) {
         benchmark_error_log("connection dropped.\n");
-        disconnect();
-
+		disconnect();
+	
         return;
     }
 }

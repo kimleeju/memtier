@@ -1,0 +1,51 @@
+workload="sw sr"
+#memory="nvm"
+memory="dram"
+#memtype="pmem"
+memtype="dram"
+
+cpupower="3400"
+threads="10"
+#threads=20
+num=0
+max=9
+
+ops=100000
+
+client=1
+
+data=1024
+RDIR="result_200508"
+#master=7000
+master=7900
+mkdir $RDIR 
+for me in $memory; do
+	for cp in $cpupower; do
+		cpupower frequency-set -u "$cp"MHz
+		for th in $threads; do
+    		num=0
+    		while [[ $num -lt $max ]]; do
+        		for wo in $workload; do
+            		    fname=thread_"$th"_"$me"_"$wo"_"$cp"_"$num".txt
+
+                		if [[ $wo == "sw" ]] ; then
+                    		/home/oslab/LJS/"$master"_"$memtype"/"$me".sh
+                		fi  
+               			sleep 10s 
+
+                		echo "----------------doing $wo load----------------------------"
+                		case $wo in
+                    		sr) ./memtier_benchmark -p $master -t $th --ratio=0:100 -d $data -c $client -n $ops > "$RDIR"/"$fname" ;;
+                    		sw) ./memtier_benchmark -p $master -t $th --ratio=100:0 -d $data -c $client -n $ops > "$RDIR"/"$fname" ;;
+               	 		esac
+                		echo "----------------doing $wo load----------------------------"
+                		echo "-------------------------------------doing $wo load------------------------------------------------"
+        		done
+        		num=$((num+1))
+    		done
+
+		done
+	done
+done
+
+

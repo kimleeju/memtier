@@ -149,7 +149,6 @@ void cluster_client::disconnect(void)
         shard_connection* sc = m_connections[i];
         sc->disconnect();
     }
-
     // delete all connections except main connection
     for (i = conn_size - 1; i > 0; i--) {
         shard_connection* sc = m_connections.back();
@@ -285,7 +284,6 @@ void cluster_client::handle_cluster_slots(protocol_response *r) {
     for (unsigned int i=0; i < prev_connections_size; i++) {
         if ((close_sc[i] == true) &&
             (m_connections[i]->get_connection_state() != conn_disconnected)) {
-
             m_connections[i]->disconnect();
         }
     }

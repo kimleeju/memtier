@@ -1,0 +1,76 @@
+1         Threads
+1         Connections per thread
+100000    Requests per client
+
+
+ALL STATS
+=========================================================================
+Type         Ops/sec     Hits/sec   Misses/sec      Latency       KB/sec 
+-------------------------------------------------------------------------
+Sets            0.00          ---          ---      0.00000         0.00 
+Gets            0.00         0.00         0.00      0.00000         0.00 
+Waits           0.00          ---          ---      0.00000          --- 
+Totals          0.00         0.00         0.00      0.00000         0.00 
+
+
+Request Latency Distribution
+Type     <= msec         Percent
+------------------------------------------------------------------------
+SET       0.029          inf
+SET       0.030          inf
+SET       0.031          inf
+SET       0.032          inf
+SET       0.033          inf
+SET       0.034          inf
+SET       0.035          inf
+SET       0.036          inf
+SET       0.037          inf
+SET       0.038          inf
+SET       0.039          inf
+SET       0.040          inf
+SET       0.041          inf
+SET       0.042          inf
+SET       0.043          inf
+SET       0.044          inf
+SET       0.045          inf
+SET       0.046          inf
+SET       0.047          inf
+SET       0.048          inf
+SET       0.049          inf
+SET       0.050          inf
+SET       0.051          inf
+SET       0.052          inf
+SET       0.053          inf
+SET       0.054          inf
+SET       0.055          inf
+SET       0.056          inf
+SET       0.057          inf
+SET       0.058          inf
+SET       0.060          inf
+SET       0.061          inf
+SET       0.064          inf
+SET       0.065          inf
+SET       0.066          inf
+SET       0.067          inf
+SET       0.068          inf
+SET       0.069          inf
+SET       0.070          inf
+SET       0.071          inf
+SET       0.072          inf
+SET       0.073          inf
+SET       0.074          inf
+SET       0.075          inf
+SET       0.076          inf
+SET       0.077          inf
+SET       0.078          inf
+SET       0.081          inf
+SET       0.082          inf
+SET       0.083          inf
+SET       0.088          inf
+SET       0.089          inf
+SET       0.100          inf
+SET       0.270          inf
+SET       0.320          inf
+SET       0.950          inf
+---
+---

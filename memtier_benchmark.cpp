@@ -32,7 +32,8 @@
 #include <errno.h>
 #include <sys/time.h>
 #include <sys/resource.h>
-
+#include <sys/ipc.h>
+#include <sys/shm.h>
 #ifdef USE_TLS
 #include <openssl/ssl.h>
 #include <openssl/err.h>
@@ -45,7 +46,10 @@
 #include "JSON_handler.h"
 #include "obj_gen.h"
 #include "memtier_benchmark.h"
-
+#define KEY_NUM 9527
+#define MEM_SIZE 1024
+int shm_id;
+void *shm_addr;
 
 static int log_level = 0;
 void benchmark_log_file_line(int level, const char *filename, unsigned int line, const char *fmt, ...)
@@ -994,7 +998,9 @@ static void* cg_thread_start(void *t)
 {
     cg_thread* thread = (cg_thread*) t;
     thread->m_cg->run();
-    thread->m_finished = true;
+
+	thread->m_finished = false;
+	//thread->m_finished = true;
 
     return t;
 }
@@ -1013,7 +1019,8 @@ void size_to_str(unsigned long int size, char *buf, int buf_len)
     }
 }
 
-run_stats run_benchmark(int run_id, benchmark_config* cfg, object_generator* obj_gen)
+run_stats run_benchmark(int run_id, benchmark_config* cfg, object_generator* obj_gen,unsigned long int over_time=0, unsigned long int all_ops=0)
+
 {
     fprintf(stderr, "[RUN #%u] Preparing benchmark client...\n", run_id);
 
@@ -1032,10 +1039,11 @@ run_stats run_benchmark(int run_id, benchmark_config* cfg, object_generator* obj
 
     // launch threads
     fprintf(stderr, "[RUN #%u] Launching threads now...\n", run_id);
-    for (std::vector<cg_thread*>::iterator i = threads.begin(); i != threads.end(); i++) {
+	for (std::vector<cg_thread*>::iterator i = threads.begin(); i != threads.end(); i++) {
         (*i)->start();
     }
 
+	unsigned long int test_time=0;
     unsigned long int prev_ops = 0;
     unsigned long int prev_bytes = 0;
     unsigned long int prev_duration = 0;
@@ -1099,6 +1107,25 @@ run_stats run_benchmark(int run_id, benchmark_config* cfg, object_generator* obj
             progress = 100.0 * total_ops / ((double)cfg->requests*cfg->clients*cfg->threads);
         else
             progress = 100.0 * (duration / 1000000.0)/cfg->test_time;
+#if 1
+
+        shm_addr = shmat( shm_id, ( void *)0, 0);
+		printf("shm_addr = %d\n",atoi((char *)shm_addr));
+		if(atoi((char *)shm_addr) != cfg->port){
+            cfg->port = atoi((char *)shm_addr);
+			unsigned long int top = cfg->requests*cfg->clients*cfg->threads;
+            cfg->requests -= total_ops/(cfg->clients*cfg->threads);
+            cfg->server_addr = new server_addr(cfg->server, cfg->port);
+            run_stats stats_failover = run_benchmark(run_id, cfg, obj_gen, (unsigned int)duration, top);
+            return stats_failover;
+		}
+        if(progress == 100){
+            active_threads=0;
+            test_time=duration;
+        }
+
+#endif
+
 
         fprintf(stderr, "[RUN #%u %.0f%%, %3u secs] %2u threads: %11lu ops, %7lu (avg: %7lu) ops/sec, %s/sec (avg: %s/sec), %5.2f (avg: %5.2f) msec latency\r",
             run_id, progress, (unsigned int) (duration / 1000000), active_threads, total_ops, cur_ops_sec, ops_sec, cur_bytes_str, bytes_str, cur_latency, avg_latency);
@@ -1133,7 +1160,19 @@ run_stats run_benchmark(int run_id, benchmark_config* cfg, object_generator* obj
         threads.erase(threads.begin());
         delete t;
     }
+	printf("======================================\n");
+    if(all_ops == 0){
+        printf(" all_ops == %lld\n ",cfg->requests*cfg->clients*cfg->threads);
+        printf("test_time == %f\n ", (double)test_time/1000000);
+        printf("Throughput == %f\n ", cfg->requests*cfg->clients*cfg->threads/((double)test_time/1000000));
 
+    }
+    else{
+        printf(" all_ops == %ld\n ", all_ops);
+        printf("test_time == %f\n ", (double)test_time/1000000);
+        printf("Throughput == %f\n ", all_ops/((double)test_time/1000000));
+    }
+    printf("======================================\n");
     return stats;
 }
 
@@ -1459,8 +1498,10 @@ int main(int argc, char *argv[])
     } else {
         outfile = stdout;
     }
-
-    if (!cfg.verify_only) {
+	shm_id = shmget( (key_t)KEY_NUM, MEM_SIZE, IPC_CREAT|0666);
+    shm_addr = shmat( shm_id, ( void *)0, 0);
+    sprintf((char*)shm_addr,"%d",cfg.port);
+	if (!cfg.verify_only) {
         std::vector<run_stats> all_stats;
         all_stats.reserve(cfg.run_count);
 
